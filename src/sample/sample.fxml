@@ -17,22 +17,23 @@
           <TableColumn fx:id="title" prefWidth="175.0" text="Title" />
             <TableColumn fx:id="director" prefWidth="166.0" text="Director" />
             <TableColumn fx:id="year" prefWidth="161.0" text="Year" />
-            <TableColumn fx:id="rating" prefWidth="132.0" text="Rating" />
+            <TableColumn fx:id="rating" prefWidth="129.0" text="Rating" />
         </columns>
       </TableView>
       <TextField fx:id="addTitle" layoutX="20.0" layoutY="390.0" prefHeight="25.0" prefWidth="139.0" promptText="Title" />
       <TextField fx:id="addDirector" layoutX="20.0" layoutY="424.0" prefHeight="25.0" prefWidth="139.0" promptText="Director" />
       <TextField fx:id="addYear" layoutX="20.0" layoutY="457.0" prefHeight="25.0" prefWidth="139.0" promptText="Year" />
-      <Button fx:id="btnAdd" layoutX="208.0" layoutY="457.0" mnemonicParsing="false" text="Add film" />
+      <Button fx:id="btnAdd" layoutX="249.0" layoutY="457.0" mnemonicParsing="false" text="Add film" />
       <Button fx:id="btnConnect" layoutX="20.0" layoutY="14.0" mnemonicParsing="false" text="Connect to database" />
-      <Label fx:id="status" layoutX="156.0" layoutY="18.0" />
+      <Label fx:id="status" layoutX="268.0" layoutY="18.0" prefHeight="17.0" prefWidth="327.0" />
       <Button fx:id="btnRefresh" layoutX="607.0" layoutY="14.0" mnemonicParsing="false" text="Refresh" />
       <TextField fx:id="deleteNumber" layoutX="524.0" layoutY="393.0" prefHeight="25.0" prefWidth="139.0" promptText="Number to delete" />
       <Button fx:id="btnDelete" layoutX="568.0" layoutY="430.0" mnemonicParsing="false" text="Delete" />
-      <Slider fx:id="addRating" blockIncrement="1.0" layoutX="170.0" layoutY="405.0" majorTickUnit="1.0" max="10.0" minorTickCount="0" prefHeight="44.0" prefWidth="139.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" />
-      <Label layoutX="222.0" layoutY="382.0" text="Rating">
+      <Slider fx:id="addRating" blockIncrement="1.0" layoutX="170.0" layoutY="405.0" majorTickUnit="1.0" max="10.0" minorTickCount="0" prefHeight="44.0" prefWidth="220.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" />
+      <Label layoutX="262.0" layoutY="384.0" text="Rating">
          <font>
             <Font size="13.0" />
          </font></Label>
+      <Button fx:id="btnDisconnect" layoutX="170.0" layoutY="14.0" mnemonicParsing="false" text="Disconnect" />
    </children>
 </Pane>

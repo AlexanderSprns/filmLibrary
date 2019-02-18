@@ -1,5 +1,6 @@
 package sample;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Film {
@@ -9,7 +10,7 @@ public class Film {
     private Date year;
     private byte rating;
 
-    public Film(int ID, String title, String director, Date year, byte rating) {
+    Film(int ID, String title, String director, Date year, byte rating) {
         this.ID = ID;
         this.title = title;
         this.director = director;
@@ -41,8 +42,9 @@ public class Film {
         this.director = director;
     }
 
-    public Date getYear() {
-        return year;
+    public String getYear() {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy");
+        return df.format(year);
     }
 
     public void setYear(Date year) {

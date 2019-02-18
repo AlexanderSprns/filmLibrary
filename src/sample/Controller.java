@@ -8,7 +8,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.paint.Color;
 
 import java.sql.*;
-import java.util.Properties;
 
 import static java.sql.DriverManager.getConnection;
 
@@ -63,11 +62,14 @@ public class Controller {
     private Button btnDelete;
 
     @FXML
+    private Button btnDisconnect;
+
+    @FXML
     void initialize(){
         btnConnect.setOnAction(event->{
             if (DBConnection()) {
                 status.setText("Connection successful");
-                status.setTextFill(Color.web("#1dff00"));
+                status.setTextFill(Color.web("#00FF00"));
             } else {
                 status.setText("Connection failed");
                 status.setTextFill(Color.web("#ff0000"));
@@ -77,7 +79,7 @@ public class Controller {
         btnRefresh.setOnAction(event -> {
             if (loadData()) {
                 status.setText("Data updated");
-                status.setTextFill(Color.web("#1dff00"));
+                status.setTextFill(Color.web("#00FF00"));
             } else {
                 status.setText("Error while loading data");
                 status.setTextFill(Color.web("#ff0000"));
@@ -87,7 +89,7 @@ public class Controller {
         btnAdd.setOnAction(event -> {
             if (addData()) {
                 status.setText("Record successfully added");
-                status.setTextFill(Color.web("#1dff00"));
+                status.setTextFill(Color.web("#00FF00"));
             } else {
                 status.setText("Error while adding record");
                 status.setTextFill(Color.web("#ff0000"));
@@ -95,21 +97,77 @@ public class Controller {
         });
 
         btnDelete.setOnAction(event -> {
-
+            if (deleteData(Integer.parseInt(deleteNumber.getText()))) {
+                status.setText("Record successfully deleted");
+                status.setTextFill(Color.web("#00FF00"));
+            } else {
+                status.setText("Error while deleting record");
+                status.setTextFill(Color.web("#ff0000"));
+            }
         });
 
+        btnDisconnect.setOnAction(event -> disconnect());
+
     }
-    private boolean deleteData() {
-        
+
+    private Connection connection = null;
+
+    private boolean DBConnection() {
+        boolean result = false;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        try {
+            String user = "root";
+            String pass = "root";
+            String url = "jdbc:mysql://localhost:3306/test_db?serverTimezone=UTC&useSSL=false";
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = getConnection(url, user, pass);
+            System.out.println("Connection ID: " + connection.toString());
+            result = true;
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private void disconnect() {
+        if (connection != null) {
+            try {
+                System.out.println("Disconnected ID: " + connection.toString());
+                connection.close();
+                status.setText("Disconnected successfully");
+                status.setTextFill(Color.web("#00FF00"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+        private boolean deleteData(int deleteNumber) {
+        boolean result = false;
+        try {
+            Statement statement = connection.createStatement();
+            statement.executeQuery("use test_db;");
+            statement.executeUpdate("delete from filmlibrary where ID = " + deleteNumber + ";");
+            statement.close();
+            result = true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private boolean addData() {
         boolean result = false;
         try {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("use filmlibrary;");
+            ResultSet resultSet = statement.executeQuery("use test_db;");
 
-            PreparedStatement statement1 = connection.prepareStatement("insert into filmlibrary(Title, Director, Year, Rating) values (?,?,?,?);");
+            PreparedStatement statement1 = connection.prepareStatement("insert into filmlibrary (Title, Director, Year, Rating) values (?,?,?,?);");
             statement1.setString(1, addTitle.getText());
             statement1.setString(2, addDirector.getText());
             statement1.setString(3, addYear.getText());
@@ -123,14 +181,6 @@ public class Controller {
             result = true;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
         return result;
     }
@@ -164,32 +214,5 @@ public class Controller {
             e.printStackTrace();
         }
         return result;
-    }
-
-    private Connection connection = null;
-    private boolean DBConnection() {
-        boolean result = false;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-
-        try {
-            String url = "jdbc:mysql://localhost:3306/test_db";
-            String user = "root";
-            String pass = "root";
-            Properties properties = new Properties();
-            properties.setProperty("user", user);
-            properties.setProperty("password", pass);
-            properties.setProperty("useSSL", "false");
-            properties.setProperty("autoReconnect", "true");
-            connection = getConnection(url, properties);
-            System.out.println("Connection ID" + connection.toString());
-            result = true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    return result;
     }
 }
