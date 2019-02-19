@@ -66,6 +66,8 @@ public class Controller {
 
     @FXML
     void initialize(){
+        IsNumeric isNumeric = new IsNumeric();
+
         btnConnect.setOnAction(event->{
             if (DBConnection()) {
                 status.setText("Connection successful");
@@ -87,7 +89,10 @@ public class Controller {
         });
 
         btnAdd.setOnAction(event -> {
-            if (addData()) {
+            if (!addTitle.getText().trim().isEmpty() && addTitle.getText() != null &&
+                    !addDirector.getText().trim().isEmpty() && addDirector.getText() != null &&
+                    !addYear.getText().trim().isEmpty() && addYear.getText() != null &&
+                    isNumeric.isNumericInt(addYear.getText()) && addData()) {
                 status.setText("Record successfully added");
                 status.setTextFill(Color.web("#00FF00"));
             } else {
@@ -97,7 +102,7 @@ public class Controller {
         });
 
         btnDelete.setOnAction(event -> {
-            if (deleteData(Integer.parseInt(deleteNumber.getText()))) {
+            if (deleteData(deleteNumber.getText())) {
                 status.setText("Record successfully deleted");
                 status.setTextFill(Color.web("#00FF00"));
             } else {
@@ -147,19 +152,31 @@ public class Controller {
         }
     }
 
-        private boolean deleteData(int deleteNumber) {
-        boolean result = false;
+    private Integer tryParse(String text) {
         try {
-            Statement statement = connection.createStatement();
-            statement.executeQuery("use test_db;");
-            statement.executeUpdate("delete from filmlibrary where ID = " + deleteNumber + ";");
-            statement.close();
-            result = true;
-        } catch (SQLException e) {
-            e.printStackTrace();
+            return Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private boolean deleteData(String deleteNumber) {
+        boolean result = false;
+        if (tryParse(deleteNumber.trim()) != null) {
+            try {
+                int number = tryParse(deleteNumber.trim());
+                Statement statement = connection.createStatement();
+                statement.executeQuery("use test_db;");
+                statement.executeUpdate("delete from filmlibrary where ID = " + number + ";");
+                statement.close();
+                result = true;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return result;
     }
+
 
     private boolean addData() {
         boolean result = false;
