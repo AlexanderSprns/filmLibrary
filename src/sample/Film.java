@@ -18,6 +18,17 @@ public class Film {
         this.rating = rating;
     }
 
+    @Override
+    public String toString() {
+        return "Film{" +
+                "ID=" + ID +
+                ", title='" + title + '\'' +
+                ", director='" + director + '\'' +
+                ", year=" + year +
+                ", rating=" + rating +
+                '}';
+    }
+
     public int getID() {
         return ID;
     }
