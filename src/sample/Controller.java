@@ -10,8 +10,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.paint.Color;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import static java.sql.DriverManager.getConnection;
 
@@ -66,6 +66,9 @@ public class Controller {
     private Button btnDisconnect;
 
     @FXML
+    private Button btnEdit;
+
+    @FXML
     void initialize(){
 
         btnConnect.setOnAction(event->{
@@ -75,6 +78,7 @@ public class Controller {
                 btnAdd.setDisable(false);
                 btnDisconnect.setDisable(false);
                 btnRefresh.setDisable(false);
+                btnConnect.setDisable(true);
             } else {
                 status.setText("Connection failed");
                 status.setTextFill(Color.web("#ff0000"));
@@ -112,15 +116,47 @@ public class Controller {
                 if(table1.getSelectionModel().getSelectedItem() != null)
                 {
                     btnDelete.setDisable(false);
+                    btnEdit.setDisable(false);
                     Film film = table1.getSelectionModel().getSelectedItem();
-                    Integer number = film.getRowNumber();
 
                     btnDelete.setOnAction(event -> {
-                        if (deleteData(hashMap.get(number))) {
+                        if (deleteData(film.getID())) {
                             status.setText("Record successfully deleted");
                             status.setTextFill(Color.web("#00FF00"));
                         } else {
                             status.setText("Error while deleting record");
+                            status.setTextFill(Color.web("#ff0000"));
+                        }
+                    });
+
+                    btnEdit.setOnAction(event -> {
+                        try {
+                            Statement statement = connection.createStatement();
+                            ResultSet resultSet;
+                            statement.executeQuery("use test_db;");
+                            resultSet = statement.executeQuery("select * from filmlibrary where ID=" + film.getID() + ";");
+                            DateFormat dateFormat = new SimpleDateFormat("yyyy");
+                            addTitle.setText(resultSet.getString(2));
+                            addDirector.setText(resultSet.getString(3));
+                            addYear.setText(dateFormat.format(resultSet.getDate(4)));
+                            addRating.setValue(resultSet.getByte(5));
+                            btnAdd.setDisable(false);
+                            btnEdit.setDisable(true);
+                            btnAdd.setText("Update");
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+                    btnAdd.setOnAction(event -> {
+                        if (editData(film.getID())) {
+                            status.setText("Record successfully updated");
+                            status.setTextFill(Color.web("#00FF00"));
+                            btnEdit.setDisable(false);
+                            btnAdd.setDisable(true);
+                            btnAdd.setText("Add");
+                        } else {
+                            status.setText("Error while updating record");
                             status.setTextFill(Color.web("#ff0000"));
                         }
                     });
@@ -130,7 +166,6 @@ public class Controller {
     }
 
     private Connection connection = null;
-    private Map<Integer, Integer> hashMap = new HashMap<>();
 
     private boolean DBConnection() {
         boolean result = false;
@@ -161,6 +196,11 @@ public class Controller {
                 connection.close();
                 status.setText("Disconnected successfully");
                 status.setTextFill(Color.web("#00FF00"));
+                btnRefresh.setDisable(true);
+                btnDelete.setDisable(true);
+                btnAdd.setDisable(true);
+                btnDisconnect.setDisable(true);
+                btnConnect.setDisable(false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -173,6 +213,24 @@ public class Controller {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private boolean editData(int IDnumber) {
+        boolean result = false;
+        try {
+            PreparedStatement statement1 = connection.prepareStatement("update filmlibrary set Title=?, Director=?, Year=?, Rating=? where ID=?");
+            statement1.setString(1, addTitle.getText().trim());
+            statement1.setString(2, addDirector.getText().trim());
+            statement1.setString(3, addYear.getText().trim());
+            statement1.setInt(4, (int) addRating.getValue());
+            statement1.setInt(5, IDnumber);
+            statement1.executeUpdate();
+            statement1.close();
+            result = true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private boolean deleteData(Integer deleteNumber) {
@@ -195,7 +253,7 @@ public class Controller {
         boolean result = false;
         try {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("use test_db;");
+            statement.executeQuery("use test_db;");
 
             PreparedStatement statement1 = connection.prepareStatement("insert into filmlibrary (Title, Director, Year, Rating) values (?,?,?,?);");
             statement1.setString(1, addTitle.getText().trim());
@@ -207,7 +265,7 @@ public class Controller {
             int resultStatement = statement1.executeUpdate();
             System.out.println("Inserted " + resultStatement + " records");
             statement.close();
-            resultSet.close();
+            statement1.close();
             result = true;
 
             addTitle.setText(null);
@@ -228,22 +286,19 @@ public class Controller {
             ResultSet resultSet;
             resultSet = statement.executeQuery("select * from filmlibrary;");
             System.out.println("executing query to DB: " + resultSet.toString());
-            int number = 1;
 
             data = FXCollections.observableArrayList();
 
-            idNumber.setCellValueFactory(new PropertyValueFactory<>("rowNumber"));
+            idNumber.setCellValueFactory(new PropertyValueFactory<>("ID"));
             title.setCellValueFactory(new PropertyValueFactory<>("title"));
             director.setCellValueFactory(new PropertyValueFactory<>("director"));
             year.setCellValueFactory(new PropertyValueFactory<>("year"));
             rating.setCellValueFactory(new PropertyValueFactory<>("rating"));
             while (resultSet.next()) {
-                System.out.println(resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t"
-                        + resultSet.getString(3) + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5));
-                data.add(new Film(resultSet.getInt(1), number,resultSet.getString(2), resultSet.getString(3),
+                System.out.println(resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t"
+                        + resultSet.getString(3) + "\t" + resultSet.getDate(4) + "\t" + resultSet.getByte(5));
+                data.add(new Film(resultSet.getInt(1),resultSet.getString(2), resultSet.getString(3),
                         resultSet.getDate(4), resultSet.getByte(5)));
-                setPair(String.valueOf(number), String.valueOf(resultSet.getInt(1)));
-                number++;
             }
             table1.setItems(data);
             resultSet.close();
@@ -253,14 +308,5 @@ public class Controller {
             e.printStackTrace();
         }
         return result;
-    }
-
-    private void setPair(String key, String value) {
-        if (tryParse(key) != null && tryParse(value) != null) {
-            hashMap.put(Integer.parseInt(key), Integer.parseInt(value));
-            System.out.println("Hash map:" + hashMap);
-        } else
-            System.out.println("Error while adding to hashmap");
-
     }
 }
