@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat;
 import static java.sql.DriverManager.getConnection;
 
 public class Controller {
+
+    private Connection connection = null;
+
     @FXML
     public TableView<Film> table1;
     private ObservableList<Film> data;
@@ -67,6 +70,9 @@ public class Controller {
 
     @FXML
     private Button btnEdit;
+
+    @FXML
+    private Button btnUpdate;
 
     @FXML
     void initialize(){
@@ -136,36 +142,39 @@ public class Controller {
                             statement.executeQuery("use test_db;");
                             resultSet = statement.executeQuery("select * from filmlibrary where ID=" + film.getID() + ";");
                             DateFormat dateFormat = new SimpleDateFormat("yyyy");
-                            addTitle.setText(resultSet.getString(2));
-                            addDirector.setText(resultSet.getString(3));
-                            addYear.setText(dateFormat.format(resultSet.getDate(4)));
-                            addRating.setValue(resultSet.getByte(5));
-                            btnAdd.setDisable(false);
+                            while (resultSet.next()) {
+                                addTitle.setText(resultSet.getString(2));
+                                addDirector.setText(resultSet.getString(3));
+                                addYear.setText(dateFormat.format(resultSet.getDate(4)));
+                                addRating.setValue(resultSet.getByte(5));
+                            }
                             btnEdit.setDisable(true);
-                            btnAdd.setText("Update");
+                            btnUpdate.setDisable(false);
+                            btnAdd.setDisable(true);
                         } catch (SQLException e) {
                             e.printStackTrace();
                         }
                     });
 
-                    btnAdd.setOnAction(event -> {
+                    btnUpdate.setOnAction(event -> {
                         if (editData(film.getID())) {
                             status.setText("Record successfully updated");
                             status.setTextFill(Color.web("#00FF00"));
                             btnEdit.setDisable(false);
-                            btnAdd.setDisable(true);
-                            btnAdd.setText("Add");
                         } else {
                             status.setText("Error while updating record");
                             status.setTextFill(Color.web("#ff0000"));
                         }
                     });
+                } else {
+                    btnEdit.setDisable(true);
+                    btnDelete.setDisable(true);
+                    btnUpdate.setDisable(true);
+                    btnAdd.setDisable(false);
                 }
             }
         });
     }
-
-    private Connection connection = null;
 
     private boolean DBConnection() {
         boolean result = false;
@@ -227,6 +236,12 @@ public class Controller {
             statement1.executeUpdate();
             statement1.close();
             result = true;
+
+            addTitle.setText(null);
+            addDirector.setText(null);
+            addYear.setText(null);
+            addRating.setValue(0);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -286,19 +301,21 @@ public class Controller {
             ResultSet resultSet;
             resultSet = statement.executeQuery("select * from filmlibrary;");
             System.out.println("executing query to DB: " + resultSet.toString());
+            int count = 1;
 
             data = FXCollections.observableArrayList();
 
-            idNumber.setCellValueFactory(new PropertyValueFactory<>("ID"));
+            idNumber.setCellValueFactory(new PropertyValueFactory<>("count"));
             title.setCellValueFactory(new PropertyValueFactory<>("title"));
             director.setCellValueFactory(new PropertyValueFactory<>("director"));
             year.setCellValueFactory(new PropertyValueFactory<>("year"));
             rating.setCellValueFactory(new PropertyValueFactory<>("rating"));
             while (resultSet.next()) {
-                System.out.println(resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t"
+                System.out.println(count + "\t" + resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t"
                         + resultSet.getString(3) + "\t" + resultSet.getDate(4) + "\t" + resultSet.getByte(5));
-                data.add(new Film(resultSet.getInt(1),resultSet.getString(2), resultSet.getString(3),
+                data.add(new Film(resultSet.getInt(1), count, resultSet.getString(2), resultSet.getString(3),
                         resultSet.getDate(4), resultSet.getByte(5)));
+                count++;
             }
             table1.setItems(data);
             resultSet.close();
