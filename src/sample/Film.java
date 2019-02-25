@@ -5,27 +5,27 @@ import java.util.Date;
 
 public class Film {
     private int ID;
-    private int count;
+    private int indexNumber;
     private String title;
     private String director;
     private Date year;
     private byte rating;
 
-    public Film(int ID, int count, String title, String director, Date year, byte rating) {
+    public Film(int ID, int indexNumber, String title, String director, Date year, byte rating) {
         this.ID = ID;
-        this.count = count;
+        this.indexNumber = indexNumber;
         this.title = title;
         this.director = director;
         this.year = year;
         this.rating = rating;
     }
 
-    public int getCount() {
-        return count;
+    public int getIndexNumber() {
+        return indexNumber;
     }
 
-    public void setCount(int count) {
-        this.count = count;
+    public void setIndexNumber(int indexNumber) {
+        this.indexNumber = indexNumber;
     }
 
     public int getID() {

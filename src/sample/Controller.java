@@ -305,7 +305,7 @@ public class Controller {
 
             data = FXCollections.observableArrayList();
 
-            idNumber.setCellValueFactory(new PropertyValueFactory<>("count"));
+            idNumber.setCellValueFactory(new PropertyValueFactory<>("indexNumber"));
             title.setCellValueFactory(new PropertyValueFactory<>("title"));
             director.setCellValueFactory(new PropertyValueFactory<>("director"));
             year.setCellValueFactory(new PropertyValueFactory<>("year"));
