@@ -5,28 +5,27 @@ import java.util.Date;
 
 public class Film {
     private int ID;
+    private int count;
     private String title;
     private String director;
     private Date year;
     private byte rating;
 
-    Film(int ID, String title, String director, Date year, byte rating) {
+    public Film(int ID, int count, String title, String director, Date year, byte rating) {
         this.ID = ID;
+        this.count = count;
         this.title = title;
         this.director = director;
         this.year = year;
         this.rating = rating;
     }
 
-    @Override
-    public String toString() {
-        return "Film{" +
-                "ID=" + ID +
-                ", title='" + title + '\'' +
-                ", director='" + director + '\'' +
-                ", year=" + year +
-                ", rating=" + rating +
-                '}';
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 
     public int getID() {
