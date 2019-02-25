@@ -78,7 +78,7 @@ public class Controller {
     void initialize(){
 
         btnConnect.setOnAction(event->{
-            if (DBConnection()) {
+            if (dbСonnection()) {
                 status.setText("Connection successful");
                 status.setTextFill(Color.web("#00FF00"));
                 btnAdd.setDisable(false);
@@ -176,7 +176,7 @@ public class Controller {
         });
     }
 
-    private boolean DBConnection() {
+    private boolean dbСonnection() {
         boolean result = false;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
