@@ -12,12 +12,13 @@ import javafx.scene.paint.Color;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Optional;
 
 import static java.sql.DriverManager.getConnection;
 
 public class Controller {
 
-    private Connection connection = null;
+    private static Connection connection = null;
 
     @FXML
     public TableView<Film> table1;
@@ -54,19 +55,10 @@ public class Controller {
     private Button btnAdd;
 
     @FXML
-    private Button btnConnect;
-
-    @FXML
     private Label status;
 
     @FXML
-    private Button btnRefresh;
-
-    @FXML
     private Button btnDelete;
-
-    @FXML
-    private Button btnDisconnect;
 
     @FXML
     private Button btnEdit;
@@ -77,90 +69,81 @@ public class Controller {
     @FXML
     void initialize(){
 
-        btnConnect.setOnAction(event->{
-            if (dbСonnection()) {
-                status.setText("Connection successful");
-                status.setTextFill(Color.web("#00FF00"));
-                btnAdd.setDisable(false);
-                btnDisconnect.setDisable(false);
-                btnRefresh.setDisable(false);
-                btnConnect.setDisable(true);
-            } else {
-                status.setText("Connection failed");
-                status.setTextFill(Color.web("#ff0000"));
-            }
-        });
-
-        btnRefresh.setOnAction(event -> {
-            if (loadData()) {
-                status.setText("Data updated");
-                status.setTextFill(Color.web("#00FF00"));
-            } else {
-                status.setText("Error while loading data");
-                status.setTextFill(Color.web("#ff0000"));
-            }
-        });
+        if (dbСonnection()) {
+            status.setText("Connection successful");
+            status.setTextFill(Color.web("#00FF00"));
+            loadData();
+        } else {
+            status.setText("Connection failed");
+            status.setTextFill(Color.web("#ff0000"));
+        }
 
         btnAdd.setOnAction(event -> {
-            if (!addTitle.getText().trim().isEmpty() && addTitle.getText() != null &&
-                    !addDirector.getText().trim().isEmpty() && addDirector.getText() != null &&
-                    !addYear.getText().trim().isEmpty() && addYear.getText() != null &&
-                    tryParse(addYear.getText()) != null && addData()) {
-                status.setText("Record successfully added");
-                status.setTextFill(Color.web("#00FF00"));
-            } else {
+            addTitle.setStyle("-fx-text-box-border: gray");
+            addDirector.setStyle("-fx-text-box-border: gray");
+            addYear.setStyle("-fx-text-box-border: gray");
+            if (addTitle.getText().trim().isEmpty() || addTitle.getText() == null) {
+                addTitle.requestFocus();
+                addTitle.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
                 status.setText("Error while adding record");
                 status.setTextFill(Color.web("#ff0000"));
+            } else if (addDirector.getText().trim().isEmpty() || addDirector.getText() == null) {
+                addDirector.requestFocus();
+                addDirector.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
+                status.setText("Error while adding record");
+                status.setTextFill(Color.web("#ff0000"));
+            } else if (addYear.getText().trim().isEmpty() || addYear.getText() == null ||
+                    tryParse(addYear.getText().trim()) == null || addYear.getText().trim().length() != 4) {
+                addYear.requestFocus();
+                addYear.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
+                status.setText("Error while adding record");
+                status.setTextFill(Color.web("#ff0000"));
+            } else if (addData()) {
+                status.setText("Record successfully added");
+                status.setTextFill(Color.web("#00FF00"));
+                loadData();
             }
         });
-
-        btnDisconnect.setOnAction(event -> disconnect());
 
         table1.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Film>() {
             @Override
             public void changed(ObservableValue<? extends Film> observable, Film oldValue, Film newValue) {
-                if(table1.getSelectionModel().getSelectedItem() != null)
-                {
+                if(table1.getSelectionModel().getSelectedItem() != null) {
                     btnDelete.setDisable(false);
                     btnEdit.setDisable(false);
+//                    btnUpdate.setDisable(false);
                     Film film = table1.getSelectionModel().getSelectedItem();
 
                     btnDelete.setOnAction(event -> {
-                        if (deleteData(film.getID())) {
-                            status.setText("Record successfully deleted");
-                            status.setTextFill(Color.web("#00FF00"));
-                        } else {
-                            status.setText("Error while deleting record");
-                            status.setTextFill(Color.web("#ff0000"));
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setTitle("Delete confirmation");
+                        alert.setHeaderText("You sure you want to delete this record?\n This action cannot be undone.");
+                        alert.setContentText(null);
+                        Optional<ButtonType> ConfResult = alert.showAndWait();
+                        if (ConfResult.get() == ButtonType.OK) {
+                            if (deleteData(film.getID())) {
+                                status.setText("Record successfully deleted");
+                                status.setTextFill(Color.web("#00FF00"));
+                                loadData();
+                            } else {
+                                status.setText("Error while deleting record");
+                                status.setTextFill(Color.web("#ff0000"));
+                            }
                         }
                     });
 
                     btnEdit.setOnAction(event -> {
-                        try {
-                            Statement statement = connection.createStatement();
-                            ResultSet resultSet;
-                            statement.executeQuery("use test_db;");
-                            resultSet = statement.executeQuery("select * from filmlibrary where ID=" + film.getID() + ";");
-                            DateFormat dateFormat = new SimpleDateFormat("yyyy");
-                            while (resultSet.next()) {
-                                addTitle.setText(resultSet.getString(2));
-                                addDirector.setText(resultSet.getString(3));
-                                addYear.setText(dateFormat.format(resultSet.getDate(4)));
-                                addRating.setValue(resultSet.getByte(5));
-                            }
-                            btnEdit.setDisable(true);
-                            btnUpdate.setDisable(false);
-                            btnAdd.setDisable(true);
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
+                        btnEdit.setDisable(true);
+                        btnUpdate.setDisable(false);
+                        editRecord(film);
                     });
 
                     btnUpdate.setOnAction(event -> {
-                        if (editData(film.getID())) {
+                        if (updateRecord(film.getID())) {
                             status.setText("Record successfully updated");
                             status.setTextFill(Color.web("#00FF00"));
-                            btnEdit.setDisable(false);
+                            btnUpdate.setDisable(true);
+                            loadData();
                         } else {
                             status.setText("Error while updating record");
                             status.setTextFill(Color.web("#ff0000"));
@@ -169,21 +152,51 @@ public class Controller {
                 } else {
                     btnEdit.setDisable(true);
                     btnDelete.setDisable(true);
-                    btnUpdate.setDisable(true);
-                    btnAdd.setDisable(false);
+//                    btnUpdate.setDisable(true);
                 }
             }
         });
+
+        table1.setRowFactory(tableView -> {
+            TableRow<Film> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    Film rowData = row.getItem();
+                    System.out.println("Double click on: " + rowData.getID());
+                    editRecord(rowData);
+                    btnUpdate.setDisable(false);
+                    btnUpdate.setOnAction(event1 -> {
+                        updateRecord(rowData.getID());
+                        loadData();
+                        btnUpdate.setDisable(true);
+                    });
+                }
+            });
+            return row;
+        });
+    }
+
+    private void editRecord(Film film) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("select filmlibrary.id, filmlibrary.title, directors.directorName, filmlibrary.year, filmlibrary.rating" +
+                    " from filmlibrary inner join directors on filmlibrary.iddirector = directors.iddirectors where id=?;");
+            statement.setInt(1, film.getID());
+            ResultSet resultSet = statement.executeQuery();
+            DateFormat dateFormat = new SimpleDateFormat("yyyy");
+            while (resultSet.next()) {
+                addTitle.setText(resultSet.getString(2));
+                addDirector.setText(resultSet.getString(3));
+                addYear.setText(dateFormat.format(resultSet.getDate(4)));
+                addRating.setValue(resultSet.getByte(5));
+            }
+            loadData();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean dbСonnection() {
         boolean result = false;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-
         try {
             String user = "root";
             String pass = "root";
@@ -198,18 +211,11 @@ public class Controller {
         return result;
     }
 
-    private void disconnect() {
+    static void disconnect() {
         if (connection != null) {
             try {
                 System.out.println("Disconnected ID: " + connection.toString());
                 connection.close();
-                status.setText("Disconnected successfully");
-                status.setTextFill(Color.web("#00FF00"));
-                btnRefresh.setDisable(true);
-                btnDelete.setDisable(true);
-                btnAdd.setDisable(true);
-                btnDisconnect.setDisable(true);
-                btnConnect.setDisable(false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -224,24 +230,38 @@ public class Controller {
         }
     }
 
-    private boolean editData(int IDnumber) {
+    private boolean updateRecord(int IDnumber) {
         boolean result = false;
         try {
-            PreparedStatement statement1 = connection.prepareStatement("update filmlibrary set Title=?, Director=?, Year=?, Rating=? where ID=?");
-            statement1.setString(1, addTitle.getText().trim());
+            PreparedStatement statement1 = connection.prepareStatement("INSERT INTO directors (directorName)\n" +
+                    "SELECT * FROM (SELECT ?) AS tmp\n" +
+                    "WHERE NOT EXISTS (\n" +
+                    "    SELECT directorName FROM directors WHERE directorName = ?\n" +
+                    ") LIMIT 1;");
+            statement1.setString(1, addDirector.getText().trim());
             statement1.setString(2, addDirector.getText().trim());
+            statement1.executeUpdate();
+            statement1.clearParameters();
+            statement1 = connection.prepareStatement("select iddirectors from directors where directorName = ?;");
+            statement1.setString(1, addDirector.getText().trim());
+            ResultSet resultSet = statement1.executeQuery();
+            statement1.clearParameters();
+            statement1 = connection.prepareStatement("update filmlibrary set title=?, iddirector=?, year=?, rating=? where id=?;");
+            statement1.setString(1, addTitle.getText().trim());
+            while (resultSet.next()) {
+                statement1.setInt(2, resultSet.getInt(1));
+            }
             statement1.setString(3, addYear.getText().trim());
-            statement1.setInt(4, (int) addRating.getValue());
+            statement1.setString(4, Double.toString(addRating.getValue()));
             statement1.setInt(5, IDnumber);
             statement1.executeUpdate();
+            System.out.println("Update :" + statement1.toString());
             statement1.close();
             result = true;
-
             addTitle.setText(null);
             addDirector.setText(null);
             addYear.setText(null);
             addRating.setValue(0);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -251,10 +271,9 @@ public class Controller {
     private boolean deleteData(Integer deleteNumber) {
         boolean result = false;
         try {
-            int number = deleteNumber;
-            Statement statement = connection.createStatement();
-            statement.executeQuery("use test_db;");
-            statement.executeUpdate("delete from filmlibrary where ID = " + number + ";");
+            PreparedStatement statement = connection.prepareStatement("delete from filmlibrary where id=?;");
+            statement.setInt(1, deleteNumber);
+            statement.executeUpdate();
             statement.close();
             result = true;
         } catch (SQLException e) {
@@ -267,27 +286,34 @@ public class Controller {
     private boolean addData() {
         boolean result = false;
         try {
-            Statement statement = connection.createStatement();
-            statement.executeQuery("use test_db;");
-
-            PreparedStatement statement1 = connection.prepareStatement("insert into filmlibrary (Title, Director, Year, Rating) values (?,?,?,?);");
-            statement1.setString(1, addTitle.getText().trim());
+            PreparedStatement statement1 = connection.prepareStatement("INSERT INTO directors (directorName)\n" +
+                    "SELECT * FROM (SELECT ?) AS tmp\n" +
+                    "WHERE NOT EXISTS (\n" +
+                    "    SELECT directorName FROM directors WHERE directorName = ?\n" +
+                    ") LIMIT 1;");
+            statement1.setString(1, addDirector.getText().trim());
             statement1.setString(2, addDirector.getText().trim());
+            statement1.executeUpdate();
+            statement1.clearParameters();
+            statement1 = connection.prepareStatement("select iddirectors from directors where directorName = ?;");
+            statement1.setString(1, addDirector.getText().trim());
+            ResultSet resultSet = statement1.executeQuery();
+            statement1.clearParameters();
+            statement1 = connection.prepareStatement("insert into filmlibrary (title, iddirector, year, rating) values (?, ?, ?, ?);");
+            statement1.setString(1, addTitle.getText().trim());
+            while (resultSet.next()) {
+                statement1.setInt(2, resultSet.getInt(1));
+            }
             statement1.setString(3, addYear.getText().trim());
             statement1.setString(4, Double.toString(addRating.getValue()));
-            System.out.println("Parametrized query" + statement1.toString());
-
-            int resultStatement = statement1.executeUpdate();
-            System.out.println("Inserted " + resultStatement + " records");
-            statement.close();
+            statement1.executeUpdate();
+            System.out.println("Parametrized query :" + statement1.toString());
             statement1.close();
             result = true;
-
             addTitle.setText(null);
             addDirector.setText(null);
             addYear.setText(null);
             addRating.setValue(0);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -299,12 +325,11 @@ public class Controller {
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet;
-            resultSet = statement.executeQuery("select * from filmlibrary;");
+            resultSet = statement.executeQuery("select filmlibrary.id, filmlibrary.title, directors.directorName, filmlibrary.year, filmlibrary.rating" +
+                    " from filmlibrary inner join directors on filmlibrary.iddirector = directors.iddirectors;");
             System.out.println("executing query to DB: " + resultSet.toString());
             int count = 1;
-
             data = FXCollections.observableArrayList();
-
             idNumber.setCellValueFactory(new PropertyValueFactory<>("indexNumber"));
             title.setCellValueFactory(new PropertyValueFactory<>("title"));
             director.setCellValueFactory(new PropertyValueFactory<>("director"));

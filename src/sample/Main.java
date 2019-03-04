@@ -6,6 +6,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import static sample.Controller.disconnect;
+
 public class Main extends Application {
 
     @Override
@@ -16,6 +18,10 @@ public class Main extends Application {
         primaryStage.show();
     }
 
+    @Override
+    public void stop() {
+        disconnect();
+    }
 
     public static void main(String[] args) {
         launch(args);
