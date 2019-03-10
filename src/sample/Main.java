@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import static sample.Controller.disconnect;
+import static sample.DBControl.disconnect;
 
 public class Main extends Application {
 
