@@ -16,6 +16,8 @@ public class Main extends Application {
         primaryStage.setTitle("Film library");
         primaryStage.setScene(new Scene(root, 700, 500));
         primaryStage.show();
+        DBControl dbControl = new DBControl();
+        dbControl.dbBackup();
     }
 
     @Override

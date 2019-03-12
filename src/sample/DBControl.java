@@ -3,6 +3,7 @@ package sample;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 
+import java.io.IOException;
 import java.sql.*;
 
 import static java.sql.DriverManager.getConnection;
@@ -19,7 +20,6 @@ class DBControl {
             String url = "jdbc:mysql://localhost:3306/test_db?serverTimezone=UTC&useSSL=false";
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = getConnection(url, user, pass);
-            System.out.println("Connection ID: " + connection.toString());
             result = true;
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -30,11 +30,32 @@ class DBControl {
     static void disconnect() {
         if (connection != null) {
             try {
-                System.out.println("Disconnected ID: " + connection.toString());
                 connection.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    void dbBackup() {
+        String user = "root";
+        String pass = "root";
+        try {
+            Process pr = Runtime.getRuntime().exec("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump " +
+                    " -u" + user + " -p" + pass + " test_db -r \"E:\\Google Backup\\filmLibrary\\test_db.sql\"");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void dbRestoring() {
+        String user = "root";
+        String pass = "root";
+        try {
+            Process pr = Runtime.getRuntime().exec("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql test_db" +
+                    " -u" + user + " -p" + pass + " -e \"source E:\\Google Backup\\filmLibrary\\test_db.sql\"");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -44,8 +65,6 @@ class DBControl {
             Statement statement = DBControl.connection.createStatement();
             resultSet = statement.executeQuery("select filmlibrary.id, filmlibrary.title, directors.directorName, filmlibrary.year, filmlibrary.rating" +
                     " from filmlibrary inner join directors on filmlibrary.iddirector = directors.iddirectors;");
-//            resultSet.close();
-//            statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -90,7 +109,6 @@ class DBControl {
             statement1.setString(4, Double.toString(addRating.getValue()));
             statement1.setInt(5, IDnumber);
             statement1.executeUpdate();
-            System.out.println("Update :" + statement1.toString());
             statement1.close();
             result = true;
         } catch (SQLException e) {
@@ -137,7 +155,6 @@ class DBControl {
             statement1.setString(3, addYear.getText().trim());
             statement1.setString(4, Double.toString(addRating.getValue()));
             statement1.executeUpdate();
-            System.out.println("Parametrized query :" + statement1.toString());
             statement1.close();
             result = true;
         } catch (SQLException e) {
