@@ -82,7 +82,7 @@ public class Controller {
         }
 
         btnRestoreDB.setOnAction(event -> {
-            dbControl.dbRestoring();
+            dbControl.dbRestoring("root", "root");
             showData();
         });
 
@@ -135,7 +135,7 @@ public class Controller {
                     btnAdd.setOnAction(event -> addRecordBtn());
 
                     btnRestoreDB.setOnAction(event -> {
-                        dbControl.dbRestoring();
+                        dbControl.dbRestoring("root", "root");
                         showData();
                     });
                 } else {

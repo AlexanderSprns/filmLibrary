@@ -37,9 +37,7 @@ class DBControl {
         }
     }
 
-    void dbBackup() {
-        String user = "root";
-        String pass = "root";
+    void dbBackup(String user, String pass) {
         try {
             Process pr = Runtime.getRuntime().exec("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump " +
                     " -u" + user + " -p" + pass + " test_db -r \"E:\\Google Backup\\filmLibrary\\test_db.sql\"");
@@ -48,13 +46,12 @@ class DBControl {
         }
     }
 
-    void dbRestoring() {
-        String user = "root";
-        String pass = "root";
+    void dbRestoring(String user, String pass) {
         try {
             Process pr = Runtime.getRuntime().exec("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql test_db" +
                     " -u" + user + " -p" + pass + " -e \"source E:\\Google Backup\\filmLibrary\\test_db.sql\"");
-        } catch (IOException e) {
+            pr.waitFor();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }

@@ -17,7 +17,7 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(root, 700, 500));
         primaryStage.show();
         DBControl dbControl = new DBControl();
-        dbControl.dbBackup();
+        dbControl.dbBackup("root", "root");
     }
 
     @Override
