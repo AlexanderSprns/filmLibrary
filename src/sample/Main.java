@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import static sample.Controller.disconnect;
+import static sample.DBControl.disconnect;
 
 public class Main extends Application {
 
@@ -16,6 +16,8 @@ public class Main extends Application {
         primaryStage.setTitle("Film library");
         primaryStage.setScene(new Scene(root, 700, 500));
         primaryStage.show();
+        DBControl dbControl = new DBControl();
+        dbControl.dbBackup("root", "root");
     }
 
     @Override
